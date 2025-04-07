@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laptop Finder Chatbot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 500px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+        }
+
+        .chat-header {
+            background-color: #4f46e5;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-header h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .chat-header .bot-avatar {
+            width: 35px;
+            height: 35px;
+            background-color: white;
+            border-radius: 50%;
+            margin-right: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chat-header .bot-avatar svg {
+            width: 20px;
+            height: 20px;
+            fill: #4f46e5;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 15px;
+            border-radius: 18px;
+            line-height: 1.4;
+            font-size: 0.95rem;
+            word-wrap: break-word;
+        }
+
+        .bot-message {
+            background-color: #f0f0f0;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+
+        .user-message {
+            background-color: #4f46e5;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+
+        .options-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .option-button {
+            background-color: #e9e9ff;
+            color: #4f46e5;
+            border: none;
+            border-radius: 15px;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-button:hover {
+            background-color: #d8d8ff;
+        }
+
+        .chat-input {
+            padding: 15px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 0.95rem;
+        }
+
+        .chat-input input:focus {
+            border-color: #4f46e5;
+        }
+
+        .chat-input button {
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 0 20px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .chat-input button:hover {
+            background-color: #3c35b5;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 10px 15px;
+            background-color: #f0f0f0;
+            border-radius: 18px;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+            width: fit-content;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background-color: #888;
+            border-radius: 50%;
+            display: inline-block;
+            animation: typing 1.4s infinite both;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0% {
+                opacity: 0.4;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+            100% {
+                opacity: 0.4;
+                transform: scale(1);
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .laptop-card {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            background-color: white;
+        }
+
+        .laptop-card h3 {
+            color: #4f46e5;
+            margin-bottom: 5px;
+        }
+
+        .laptop-card p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+        }
+
+        .restart-button {
+            background-color: #f0f0f0;
+            border: none;
+            border-radius: 15px;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .restart-button:hover {
+            background-color: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+<div class="chat-container">
+    <div class="chat-header">
+        <div class="bot-avatar">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="2" y1="20" x2="22" y2="20"></line>
+                <line x1="7" y1="20" x2="7" y2="17"></line>
+                <line x1="17" y1="20" x2="17" y2="17"></line>
+            </svg>
+        </div>
+        <h2>Laptop Finder Assistant</h2>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+        <!-- Messages will be added here dynamically -->
+    </div>
+    <div class="chat-input">
+        <input type="text" id="user-input" placeholder="Type your message..." autocomplete="off">
+        <button id="send-button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<script>
+    // Laptop database
+    const laptops = [
+        {
+            name: "Budget Work Laptop",
+            price: 499,
+            usage: ["work", "student", "casual"],
+            specs: {
+                processor: "Intel Core i3 / AMD Ryzen 3",
+                ram: "8GB",
+                storage: "256GB SSD",
+                display: "14-inch HD",
+                graphics: "Integrated"
+            }
+        },
+        {
+            name: "Mid-range Work Laptop",
+            price: 799,
+            usage: ["work", "student", "casual"],
+            specs: {
+                processor: "Intel Core i5 / AMD Ryzen 5",
+                ram: "16GB",
+                storage: "512GB SSD",
+                display: "15.6-inch Full HD",
+                graphics: "Integrated"
+            }
+        },
+        {
+            name: "Premium Work Laptop",
+            price: 1299,
+            usage: ["work", "professional", "content creation"],
+            specs: {
+                processor: "Intel Core i7 / AMD Ryzen 7",
+                ram: "16GB",
+                storage: "1TB SSD",
+                display: "15.6-inch Full HD IPS",
+                graphics: "Dedicated (2GB)"
+            }
+        },
+        {
+            name: "Budget Gaming Laptop",
+            price: 799,
+            usage: ["gaming", "casual"],
+            specs: {
+                processor: "Intel Core i5 / AMD Ryzen 5",
+                ram: "8GB",
+                storage: "512GB SSD",
+                display: "15.6-inch Full HD",
+                graphics: "NVIDIA GTX 1650 / AMD Equivalent"
+            }
+        },
+        {
+            name: "Mid-range Gaming Laptop",
+            price: 1199,
+            usage: ["gaming", "content creation"],
+            specs: {
+                processor: "Intel Core i7 / AMD Ryzen 7",
+                ram: "16GB",
+                storage: "512GB SSD",
+                display: "15.6-inch Full HD 144Hz",
+                graphics: "NVIDIA RTX 3060 / AMD Equivalent"
+            }
+        },
+        {
+            name: "Premium Gaming Laptop",
+            price: 1999,
+            usage: ["gaming", "content creation", "professional"],
+            specs: {
+                processor: "Intel Core i9 / AMD Ryzen 9",
+                ram: "32GB",
+                storage: "1TB SSD",
+                display: "17.3-inch QHD 165Hz",
+                graphics: "NVIDIA RTX 3080 / AMD Equivalent"
+            }
+        },
+        {
+            name: "Budget Student Laptop",
+            price: 399,
+            usage: ["student", "casual"],
+            specs: {
+                processor: "Intel Celeron / AMD Athlon",
+                ram: "4GB",
+                storage: "128GB SSD",
+                display: "14-inch HD",
+                graphics: "Integrated"
+            }
+        },
+        {
+            name: "Ultrabook",
+            price: 1099,
+            usage: ["work", "professional", "travel"],
+            specs: {
+                processor: "Intel Core i5 / AMD Ryzen 5",
+                ram: "16GB",
+                storage: "512GB SSD",
+                display: "13.3-inch Full HD",
+                graphics: "Integrated"
+            }
+        },
+        {
+            name: "Content Creator Laptop",
+            price: 1699,
+            usage: ["content creation", "professional"],
+            specs: {
+                processor: "Intel Core i7 / AMD Ryzen 7",
+                ram: "32GB",
+                storage: "1TB SSD",
+                display: "15.6-inch 4K",
+                graphics: "NVIDIA RTX 3070 / AMD Equivalent"
+            }
+        }
+    ];
+
+    // Chat state
+    const chatState = {
+        currentStep: 'greeting',
+        userBudget: null,
+        userUsage: null,
+        userSpecs: {
+            ram: null,
+            storage: null,
+            display: null,
+            graphics: null
+        }
+    };
+
+    // DOM elements
+    const chatMessages = document.getElementById('chat-messages');
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-button');
+
+    // Chat flow
+    const chatFlow = {
+        greeting: {
+            message: "👋 Hello! I'm your laptop finder assistant. I'll help you find the perfect laptop based on your needs. Let's start with your budget. What's your price range?",
+            options: ["Under $500", "$500-$1000", "$1000-$1500", "Above $1500"],
+            next: 'usage'
+        },
+        usage: {
+            message: "Great! Now, what will you primarily use this laptop for?",
+            options: ["Work/Office", "Student/Education", "Gaming", "Content Creation (Photo/Video)", "Casual Browsing"],
+            next: 'ram'
+        },
+        ram: {
+            message: "How much RAM do you need?",
+            options: ["4GB (Basic)", "8GB (Standard)", "16GB (High Performance)", "32GB (Professional)"],
+            next: 'storage'
+        },
+        storage: {
+            message: "What storage capacity are you looking for?",
+            options: ["128GB SSD", "256GB SSD", "512GB SSD", "1TB SSD or larger"],
+            next: 'display'
+        },
+        display: {
+            message: "What display size do you prefer?",
+            options: ["13-14 inch (Portable)", "15-16 inch (Standard)", "17 inch or larger (Desktop Replacement)"],
+            next: 'graphics'
+        },
+        graphics: {
+            message: "Do you need a dedicated graphics card?",
+            options: ["No (Integrated is fine)", "Yes (For gaming/design)"],
+            next: 'recommendation'
+        },
+        recommendation: {
+            message: "Thanks for providing all the information! Based on your requirements, here's my recommendation:",
+            next: null
+        }
+    };
+
+    // Initialize chat
+    function initChat() {
+        addBotMessage(chatFlow.greeting.message);
+        showOptions(chatFlow.greeting.options);
+    }
+
+    // Add bot message
+    function addBotMessage(message) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', 'bot-message');
+        messageElement.textContent = message;
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Add user message
+    function addUserMessage(message) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', 'user-message');
+        messageElement.textContent = message;
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Show typing indicator
+    function showTypingIndicator() {
+        const indicator = document.createElement('div');
+        indicator.classList.add('typing-indicator');
+        indicator.id = 'typing-indicator';
+
+        for (let i = 0; i < 3; i++) {
+            const dot = document.createElement('span');
+            indicator.appendChild(dot);
+        }
+
+        chatMessages.appendChild(indicator);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Hide typing indicator
+    function hideTypingIndicator() {
+        const indicator = document.getElementById('typing-indicator');
+        if (indicator) {
+            indicator.remove();
+        }
+    }
+
+    // Show options
+    function showOptions(options) {
+        const optionsContainer = document.createElement('div');
+        optionsContainer.classList.add('options-container');
+
+        options.forEach(option => {
+            const button = document.createElement('button');
+            button.classList.add('option-button');
+            button.textContent = option;
+            button.addEventListener('click', () => handleOptionClick(option));
+            optionsContainer.appendChild(button);
+        });
+
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', 'bot-message');
+        messageElement.appendChild(optionsContainer);
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Handle option click
+    function handleOptionClick(option) {
+        addUserMessage(option);
+        processUserInput(option);
+    }
+
+    // Process user input
+    function processUserInput(input) {
+        // Remove all option buttons after selection
+        const optionsContainers = document.querySelectorAll('.options-container');
+        optionsContainers.forEach(container => {
+            const buttons = container.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.disabled = true;
+                if (button.textContent !== input) {
+                    button.style.opacity = '0.5';
+                }
+            });
+        });
+
+        // Process based on current step
+        switch (chatState.currentStep) {
+            case 'greeting':
+                processBudgetInput(input);
+                break;
+            case 'usage':
+                processUsageInput(input);
+                break;
+            case 'ram':
+                processRamInput(input);
+                break;
+            case 'storage':
+                processStorageInput(input);
+                break;
+            case 'display':
+                processDisplayInput(input);
+                break;
+            case 'graphics':
+                processGraphicsInput(input);
+                break;
+        }
+    }
+
+    // Process budget input
+    function processBudgetInput(input) {
+        if (input.includes("Under $500")) {
+            chatState.userBudget = 500;
+        } else if (input.includes("$500-$1000")) {
+            chatState.userBudget = 1000;
+        } else if (input.includes("$1000-$1500")) {
+            chatState.userBudget = 1500;
+        } else if (input.includes("Above $1500")) {
+            chatState.userBudget = 2000;
+        }
+
+        // Move to next step
+        chatState.currentStep = chatFlow.greeting.next;
+
+        // Simulate typing
+        showTypingIndicator();
+        setTimeout(() => {
+            hideTypingIndicator();
+            addBotMessage(chatFlow.usage.message);
+            showOptions(chatFlow.usage.options);
+        }, 1000);
+    }
+
+    // Process usage input
+    function processUsageInput(input) {
+        if (input.includes("Work/Office")) {
+            chatState.userUsage = "work";
+        } else if (input.includes("Student/Education")) {
+            chatState.userUsage = "student";
+        } else if (input.includes("Gaming")) {
+            chatState.userUsage = "gaming";
+        } else if (input.includes("Content Creation")) {
+            chatState.userUsage = "content creation";
+        } else if (input.includes("Casual")) {
+            chatState.userUsage = "casual";
+        }
+
+        // Move to next step
+        chatState.currentStep = chatFlow.usage.next;
+
+        // Simulate typing
+        showTypingIndicator();
+        setTimeout(() => {
+            hideTypingIndicator();
+            addBotMessage(chatFlow.ram.message);
+            showOptions(chatFlow.ram.options);
+        }, 1000);
+    }
+
+    // Process RAM input
+    function processRamInput(input) {
+        if (input.includes("4GB")) {
+            chatState.userSpecs.ram = "4GB";
+        } else if (input.includes("8GB")) {
+            chatState.userSpecs.ram = "8GB";
+        } else if (input.includes("16GB")) {
+            chatState.userSpecs.ram = "16GB";
+        } else if (input.includes("32GB")) {
+            chatState.userSpecs.ram = "32GB";
+        }
+
+        // Move to next step
+        chatState.currentStep = chatFlow.ram.next;
+
+        // Simulate typing
+        showTypingIndicator();
+        setTimeout(() => {
+            hideTypingIndicator();
+            addBotMessage(chatFlow.storage.message);
+            showOptions(chatFlow.storage.options);
+        }, 1000);
+    }
+
+    // Process storage input
+    function processStorageInput(input) {
+        chatState.userSpecs.storage = input;
+
+        // Move to next step
+        chatState.currentStep = chatFlow.storage.next;
+
+        // Simulate typing
+        showTypingIndicator();
+        setTimeout(() => {
+            hideTypingIndicator();
+            addBotMessage(chatFlow.display.message);
+            showOptions(chatFlow.display.options);
+        }, 1000);
+    }
+
+    // Process display input
+    function processDisplayInput(input) {
+        if (input.includes("13-14")) {
+            chatState.userSpecs.display = "small";
+        } else if (input.includes("15-16")) {
+            chatState.userSpecs.display = "medium";
+        } else if (input.includes("17")) {
+            chatState.userSpecs.display = "large";
+        }
+
+        // Move to next step
+        chatState.currentStep = chatFlow.display.next;
+
+        // Simulate typing
+        showTypingIndicator();
+        setTimeout(() => {
+            hideTypingIndicator();
+            addBotMessage(chatFlow.graphics.message);
+            showOptions(chatFlow.graphics.options);
+        }, 1000);
+    }
+
+    // Process graphics input
+    function processGraphicsInput(input) {
+        chatState.userSpecs.graphics = input.includes("Yes") ? "dedicated" : "integrated";
+
+        // Move to next step
+        chatState.currentStep = chatFlow.graphics.next;
+
+        // Simulate typing
+        showTypingIndicator();
+        setTimeout(() => {
+            hideTypingIndicator();
+            addBotMessage(chatFlow.recommendation.message);
+            provideRecommendation();
+        }, 1500);
+    }
+
+    // Provide laptop recommendation
+    function provideRecommendation() {
+        // Filter laptops based on user preferences
+        let filteredLaptops = laptops.filter(laptop => {
+            // Budget filter
+            if (laptop.price > chatState.userBudget) {
+                return false;
+            }
+
+            // Usage filter (partial match is fine)
+            let usageMatch = false;
+            for (let usage of laptop.usage) {
+                if (usage.includes(chatState.userUsage) || chatState.userUsage.includes(usage)) {
+                    usageMatch = true;
+                    break;
+                }
+            }
+
+            if (!usageMatch) {
+                return false;
+            }
+
+            // RAM filter (minimum)
+            const userRamGB = parseInt(chatState.userSpecs.ram);
+            const laptopRamGB = parseInt(laptop.specs.ram);
+            if (laptopRamGB < userRamGB) {
+                return false;
+            }
+
+            // Graphics filter
+            if (chatState.userSpecs.graphics === "dedicated" &&
+                laptop.specs.graphics.toLowerCase().includes("integrated")) {
+                return false;
+            }
+
+            return true;
+        });
+
+        // Sort by closest to budget (but not over)
+        filteredLaptops.sort((a, b) => b.price - a.price);
+
+        // Get the best match
+        const bestMatch = filteredLaptops[0];
+
+        if (bestMatch) {
+            // Create laptop card
+            const laptopCard = document.createElement('div');
+            laptopCard.classList.add('laptop-card');
+
+            laptopCard.innerHTML = `
+                    <h3>${bestMatch.name}</h3>
+                    <p><strong>Price:</strong> $${bestMatch.price}</p>
+                    <p><strong>Processor:</strong> ${bestMatch.specs.processor}</p>
+                    <p><strong>RAM:</strong> ${bestMatch.specs.ram}</p>
+                    <p><strong>Storage:</strong> ${bestMatch.specs.storage}</p>
+                    <p><strong>Display:</strong> ${bestMatch.specs.display}</p>
+                    <p><strong>Graphics:</strong> ${bestMatch.specs.graphics}</p>
+                `;
+
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', 'bot-message');
+            messageElement.appendChild(laptopCard);
+
+            // Add restart button
+            const restartButton = document.createElement('button');
+            restartButton.classList.add('restart-button');
+            restartButton.textContent = "Start Over";
+            restartButton.addEventListener('click', restartChat);
+            messageElement.appendChild(restartButton);
+
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        } else {
+            // Provide more specific feedback about why no laptops matched
+            let errorMessage = "I couldn't find a laptop that matches all your requirements. ";
+
+            // Check which criteria might be causing the issue
+            if (chatState.userBudget < 500 && (chatState.userSpecs.ram === "16GB" || chatState.userSpecs.ram === "32GB")) {
+                errorMessage += "Your budget is too low for the amount of RAM you requested. ";
+            }
+
+            if (chatState.userBudget < 800 && chatState.userSpecs.graphics === "dedicated") {
+                errorMessage += "Laptops with dedicated graphics cards typically cost more than your budget. ";
+            }
+
+            if (chatState.userBudget < 1000 && chatState.userUsage === "gaming" && chatState.userSpecs.ram === "32GB") {
+                errorMessage += "High-end gaming laptops with 32GB RAM exceed your budget. ";
+            }
+
+            // Suggest alternatives
+            errorMessage += "Here are some suggestions:";
+
+            addBotMessage(errorMessage);
+
+            // Show alternative suggestions
+            const suggestionsContainer = document.createElement('div');
+            suggestionsContainer.classList.add('options-container');
+
+            // Create suggestion buttons based on the user's criteria
+            const suggestions = [];
+
+            if (chatState.userBudget < 500 && (chatState.userSpecs.ram === "16GB" || chatState.userSpecs.ram === "32GB")) {
+                suggestions.push("Increase Budget");
+                suggestions.push("Reduce RAM Requirements");
+            }
+
+            if (chatState.userBudget < 800 && chatState.userSpecs.graphics === "dedicated") {
+                suggestions.push("Increase Budget for Graphics");
+                suggestions.push("Use Integrated Graphics");
+            }
+
+            if (suggestions.length === 0) {
+                suggestions.push("Try Different Specifications");
+                suggestions.push("Increase Budget");
+            }
+
+            suggestions.push("Start Over");
+
+            suggestions.forEach(suggestion => {
+                const button = document.createElement('button');
+                button.classList.add('option-button');
+                button.textContent = suggestion;
+                button.addEventListener('click', () => {
+                    addUserMessage(suggestion);
+
+                    if (suggestion === "Start Over") {
+                        restartChat();
+                    } else {
+                        // Provide advice based on the selected suggestion
+                        showTypingIndicator();
+                        setTimeout(() => {
+                            hideTypingIndicator();
+
+                            if (suggestion.includes("Increase Budget")) {
+                                addBotMessage("Increasing your budget will give you access to more options. Let's start over and you can select a higher budget range.");
+                                setTimeout(restartChat, 2000);
+                            } else if (suggestion.includes("Reduce RAM")) {
+                                addBotMessage("8GB RAM is sufficient for most everyday tasks and light gaming. Let's start over and you can select a lower RAM option.");
+                                setTimeout(restartChat, 2000);
+                            } else if (suggestion.includes("Integrated Graphics")) {
+                                addBotMessage("Integrated graphics are suitable for everyday tasks, light photo editing, and even some light gaming. Let's start over and you can select 'No' for dedicated graphics.");
+                                setTimeout(restartChat, 2000);
+                            } else {
+                                addBotMessage("Let's try again with different specifications to find a laptop that meets your needs.");
+                                setTimeout(restartChat, 2000);
+                            }
+                        }, 1000);
+                    }
+                });
+                suggestionsContainer.appendChild(button);
+            });
+
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', 'bot-message');
+            messageElement.appendChild(suggestionsContainer);
+
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    }
+
+    // Restart chat
+    function restartChat() {
+        // Clear chat messages
+        chatMessages.innerHTML = '';
+
+        // Reset chat state
+        chatState.currentStep = 'greeting';
+        chatState.userBudget = null;
+        chatState.userUsage = null;
+        chatState.userSpecs = {
+            ram: null,
+            storage: null,
+            display: null,
+            graphics: null
+        };
+
+        // Initialize chat again
+        initChat();
+    }
+
+    // Handle send button click
+    sendButton.addEventListener('click', () => {
+        const message = userInput.value.trim();
+        if (message) {
+            addUserMessage(message);
+            userInput.value = '';
+
+            // Process the text input more intelligently
+            showTypingIndicator();
+            setTimeout(() => {
+                hideTypingIndicator();
+
+                // Convert to lowercase for easier comparison
+                const lowerMessage = message.toLowerCase();
+
+                // Check for budget-related queries
+                if (lowerMessage.includes('budget') || lowerMessage.includes('cheap') || lowerMessage.includes('affordable') ||
+                    lowerMessage.includes('price') || lowerMessage.includes('cost') || lowerMessage.includes('$')) {
+                    addBotMessage("I see you're asking about budget. You can select your price range from the options above, or if you've already selected a budget, you can continue with the other questions.");
+                }
+                // Check for gaming-related queries
+                else if (lowerMessage.includes('game') || lowerMessage.includes('gaming') || lowerMessage.includes('fps') ||
+                    lowerMessage.includes('graphics') || lowerMessage.includes('gpu')) {
+                    addBotMessage("For gaming laptops, I recommend selecting 'Gaming' as your primary usage and 'Yes' for dedicated graphics card. Gaming laptops typically need at least 8GB RAM, preferably 16GB for modern games.");
+                }
+                // Check for work/student related queries
+                else if (lowerMessage.includes('work') || lowerMessage.includes('office') || lowerMessage.includes('student') ||
+                    lowerMessage.includes('school') || lowerMessage.includes('college')) {
+                    addBotMessage("For work or student use, you typically don't need a high-end laptop unless you're doing specialized tasks. 8GB RAM and an i5/Ryzen 5 processor are usually sufficient for most office and school tasks.");
+                }
+                // Check for help or restart requests
+                else if (lowerMessage.includes('help') || lowerMessage.includes('restart') || lowerMessage.includes('start over')) {
+                    addBotMessage("If you'd like to start over, you can click the 'Start Over' button at any time.");
+
+                    // Add restart button
+                    const messageElement = document.createElement('div');
+                    messageElement.classList.add('message', 'bot-message');
+
+                    const restartButton = document.createElement('button');
+                    restartButton.classList.add('restart-button');
+                    restartButton.textContent = "Start Over";
+                    restartButton.addEventListener('click', restartChat);
+                    messageElement.appendChild(restartButton);
+
+                    chatMessages.appendChild(messageElement);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+                // Default response for other queries
+                else {
+                    addBotMessage("I'm designed to help you find a laptop through a guided process. Please use the option buttons to navigate through the questions. If you have specific requirements, you can mention keywords like 'gaming', 'budget', or 'work' for more tailored advice.");
+                }
+            }, 1000);
+        }
+    });
+
+    // Handle enter key press
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendButton.click();
+        }
+    });
+
+    // Initialize chat on page load
+    window.addEventListener('load', initChat);
+</script>
+</body>
+</html>
+
