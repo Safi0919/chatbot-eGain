@@ -37,8 +37,7 @@ This chatbot uses a simple, rule-based conversation system to interact with the 
 
 ### Features:
 - Chat-style interface with modern UI/UX design
-- Dynamic message rendering using JavaScript DOM manipulation
-- Responsive layout for desktop and mobile
+- Responsive layout for users having a desktop
 - Basic error handling for unexpected or invalid inputs
 
 ---
